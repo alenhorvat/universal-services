@@ -28,7 +28,7 @@ technology/implementation. Hence, we introduce helper APIs and Operation Signing
 
 Whenever a registry supports the above-mentioned methods, interaction with the registries can become universal/independent of the underlying technology:
 
-1. (optional )Alice authenticates to the registry, e.g., she performs a DID Auth.
+1. (optional) Alice authenticates to the registry, e.g., she performs a DID Auth.
 2. Alice calls the create/update/delete helper JSON-RPC method with the
 input arguments.
 3. The JSON-RPC API checks the input method, validates the input arguments,
@@ -103,4 +103,17 @@ See: [OpenAPI Specs](api/openapi.yaml)
 
 ## Immutable APIs
 
-Immutable API design description goes here.
+The immutable-API design description goes here.
+
+## TODO
+
+* OSC schema
+* Immutable APIs design description
+
+## References
+
+* https://w3c.github.io/did-core/
+* https://www.w3.org/TR/vc-data-model
+* https://github.com/decentralized-identity/universal-resolver
+* https://github.com/decentralized-identity/universal-registrar
+* https://api.ebsi.xyz/docs/
