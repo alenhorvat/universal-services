@@ -99,6 +99,8 @@ A non-normative example:
 
 In this section, we provide OpenAPI specifications for the core CRUD universal operations.
 
-See: api/openapi.yaml
+See: [OpenAPI Specs](api/openapi.yaml)
 
 ## Immutable APIs
+
+Immutable API design description goes here.
