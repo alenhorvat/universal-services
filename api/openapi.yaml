@@ -1,0 +1,759 @@
+openapi: 3.0.3
+info:
+  title: Universal Services
+  description: This is a sample Universal Service OpenAPI specification.
+  contact:
+    email: alen.horvat@netis.si
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+  version: 1.0.0
+externalDocs:
+  description: Universal Services - Github
+  url: 'https://github.com/alenhorvat/universal-services'
+servers:
+  - url: localhost/universal-services/v1/registries/did-registry
+tags:
+  - name: identifiers
+    description: Resolve decentralized identifier
+  - name: jsonrpc
+    description: Helper JSON-RPC methods
+paths:
+  /identifiers:
+    get:
+      tags:
+        - identifiers
+      summary: Get a paginated list of registered decentralized identifiers (DIDs)
+      description: A paginated list of registered DIDs.
+      operationId: get-identifiers
+      parameters:
+        - in: query
+          name: 'page[before]'
+          schema:
+            type: string
+          description: >-
+            Cursor that points to the start of the page of data that has been
+            returned.
+        - in: query
+          name: 'page[after]'
+          schema:
+            type: string
+          description: >-
+            Cursor that points to the end of the page of data that has been
+            returned.
+        - schema:
+            type: integer
+          in: query
+          name: 'page[size]'
+          description: Defines the maximum number of objects that may be returned.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  self:
+                    type: string
+                    description: DID URIs
+                  items:
+                    type: array
+                    description: List of DIDs
+                    items:
+                      $ref: '#/components/schemas/did'
+                  total:
+                    type: integer
+                    description: Total number of items in a collection
+                  pageSize:
+                    type: integer
+                    description: Number of items to be returned per page
+                  links:
+                    $ref: '#/components/schemas/links'
+              examples:
+                Success:
+                  value:
+                    self: >-
+                      https://trusted.registry/universal-services/v1/registries/did-registry/identifiers?page[after]=3&page[size]=2
+                    items:
+                      - 'did:example:123'
+                      - 'did:example:abc'
+                    total: 61
+                    pageSize: 2
+                    links:
+                      first: >-
+                        https://trusted.registries/universal-services/v1/registries/did-registry/identifiers?page[after]=1&page[size]=2
+                      prev: >-
+                        https://trusted.registries/universal-services/v1/registries/did-registry/identifiers?page[after]=2&page[size]=2
+                      next: >-
+                        https://trusted.registries/universal-services/v1/registries/did-registry/identifiers?page[after]=4&page[size]=2
+                      last: >-
+                        https://trusted.registries/universal-services/v1/registries/did-registry/identifiers?page[after]=31&page[size]=2
+        '400':
+          description: Bad Request Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                Bad Paging Request:
+                  value:
+                    title: Bad Paging Request
+                    status: 400
+                    detail: PageSize should not be greater than 50
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                Internal Server Error:
+                  $ref: '#/components/examples/InternalError'
+  '/identifiers/{did}':
+    get:
+      tags:
+        - identifiers
+      summary: Resolve a decentralized identifier (DID)
+      description: Resolve a DID and obtain the corresponding DID Document
+      operationId: get-identifiers-did
+      parameters:
+        - name: did
+          in: path
+          schema:
+            type: string
+          example: 'did:{did-method}:{method-specific identifier}'
+          required: true
+      responses:
+        '200':
+          description: DID Document exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/didDocument'
+              examples:
+                'GET did:example:123':
+                  value:
+                    '@context': 'https://www.w3.org/ns/did/v1'
+                    id: 'did:example:123'
+                    verificationMethod:
+                      - id: >-
+                          did:example:123#ZC2jXTO6t4R501bfCXv3RxarZyUbdP2w_psLwMuY6ec
+                        type: Ed25519VerificationKey2018
+                        controller: 'did:example:123'
+                        publicKeyBase58: H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV
+                      - id: >-
+                          did:example:123#zQ3shP2mWsZYWgvgM11nenXRTx9L1yiJKmkf9dfX7NaMKb1pX
+                        type: EcdsaSecp256k1VerificationKey2019
+                        controller: 'did:example:123'
+                        publicKeyBase58: d5cW2R53NHTTkv7EQSYR8YxaKx7MVCcchjmK5EgCNXxo
+                      - id: >-
+                          did:example:123#_Qq0UL2Fq651Q0Fjd6TvnYE-faHiOpRlPVQcY_-tA4A
+                        type: JsonWebKey2020
+                        controller: 'did:example:123'
+                        publicKeyJwk:
+                          kty: OKP
+                          crv: Ed25519
+                          x: VCpo2LMLhn6iWku8MKvSLg2ZAoC-nlOyPVQaO3FxVeQ
+                      - id: >-
+                          did:example:123#z6LSnjagzhe8Df6gZmroW3wjDd7XQLwAuYfwa4ZeTBCGFoYc
+                        type: JsonWebKey2020
+                        controller: 'did:example:123'
+                        publicKeyJwk:
+                          kty: OKP
+                          crv: X25519
+                          x: pE_mG098rdQjY3MKK2D5SUQ6ZOEW3a6Z6T7Z4SgnzCE
+                      - id: >-
+                          did:example:123#4SZ-StXrp5Yd4_4rxHVTCYTHyt4zyPfN1fIuYsm6k3A
+                        type: JsonWebKey2020
+                        controller: 'did:example:123'
+                        publicKeyJwk:
+                          kty: EC
+                          crv: secp256k1
+                          x: Z4Y3NNOxv0J6tCgqOBFnHnaZhJF6LdulT7z8A-2D5_8
+                          'y': i5a2NtJoUKXkLm6q8nOEu9WOkso1Ag6FTUT6k_LMnGk
+                      - id: >-
+                          did:example:123#n4cQ-I_WkHMcwXBJa7IHkYu8CMfdNcZKnKsOrnHLpFs
+                        type: JsonWebKey2020
+                        controller: 'did:example:123'
+                        publicKeyJwk:
+                          kty: RSA
+                          e: AQAB
+                          'n': omwsC1...00EHj4vCljFw
+                      - id: >-
+                          did:example:123#_TKzHv2jFIyvdTGF1Dsgwngfdg3SH6TpDv0Ta1aOEkw
+                        type: JsonWebKey2020
+                        controller: 'did:example:123'
+                        publicKeyJwk:
+                          kty: EC
+                          crv: P-256
+                          x: 38M1FDts7Oea7urmseiugGW7tWc3mLpJh6rKe7xINZ8
+                          'y': nDQW6XZ7b_u2Sy9slofYLlG03sOEoug3I0aAPQ0exs4
+                      - id: >-
+                          did:example:123#8wgRfY3sWmzoeAL-78-oALNvNj67ZlQxd1ss_NX1hZY
+                        type: JsonWebKey2020
+                        controller: 'did:example:123'
+                        publicKeyJwk:
+                          kty: EC
+                          crv: P-384
+                          x: >-
+                            GnLl6mDti7a2VUIZP5w6pcRX8q5nvEIgB3Q_5RI2p9F_QVsaAlDN7IG68Jn0dS_F
+                          'y': >-
+                            jq4QoAHKiIzezDp88s_cxSPXtuXYFliuCGndgU4Qp8l91xzD1spCmFIzQgVjqvcP
+                      - id: >-
+                          did:example:123#NjQ6Y_ZMj6IUK_XkgCDwtKHlNTUTVjEYOWZtxhp1n-E
+                        type: JsonWebKey2020
+                        controller: 'did:example:123'
+                        publicKeyJwk:
+                          kty: EC
+                          crv: P-521
+                          x: >-
+                            AVlZG23LyXYwlbjbGPMxZbHmJpDSu-IvpuKigEN2pzgWtSo--Rwd-n78nrWnZzeDc187Ln3qHlw5LRGrX4qgLQ-y
+                          'y': >-
+                            ANIbFeRdPHf1WYMCUjcPz-ZhecZFybOqLIJjVOlLETH7uPlyG0gEoMWnIZXhQVypPy_HtUiUzdnSEPAylYhHBTX2
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                Invalid DID:
+                  value:
+                    title: Bad request
+                    status: 400
+                    detail: 'The format of the {did} parameter is invalid'
+                Bad Request:
+                  $ref: '#/components/examples/BadRequest'
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                Not Found:
+                  value:
+                    title: Not Found
+                    status: 404
+                    detail: '{did} parameter not found'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                Internal Server Error:
+                  $ref: '#/components/examples/InternalError'
+  /jsonrpc:
+    post:
+      operationId: post-jsonrpc
+      tags:
+        - jsonrpc
+      summary: Helper JSON-RPC APIs
+      description: >
+        Helper APIs that assist the construction of operations for the universal
+        services.
+      requestBody:
+        description: >
+          The body follows the
+
+          [JSON-RPC 2.0 specification](https://www.jsonrpc.org/specification).
+
+
+          It requires the following fields:
+
+
+          - **jsonrpc**: Must be exactly '2.0'
+
+          - **method**: Method that to be invoked. Possible values:
+          insertAdministrator,
+
+          insertIssuer, insertPolicy, signedTransaction.
+
+          - **params**: Array of parameters
+
+          - **id**: Identifier stablished by the client
+        content:
+          application/json:
+            schema:
+              required:
+                - jsonrpc
+                - id
+                - method
+                - params
+              type: object
+              properties:
+                jsonrpc:
+                  description: Must be exactly '2.0'
+                  type: string
+                method:
+                  description: Method name
+                  type: string
+                params:
+                  description: Array of method-specific parameters
+                  type: array
+                  items:
+                    type: object
+                id:
+                  description: Identifier established by the client
+                  type: integer
+                  example: 1
+            examples:
+              Operation Signing Request - create new decentralized identifier:
+                value:
+                  jsonrpc: '2.0'
+                  method: createIdentifier
+                  params:
+                    - did: 'did:example:abc'
+                      didDocument: didDocumentGoesHere
+                  id: 1
+              Operation Signing Request - update a decentralized identifier:
+                value:
+                  jsonrpc: '2.0'
+                  method: updateIdentifier
+                  params:
+                    - did: 'did:example:abc'
+                      didDocument: new didDocumentGoesHere
+                  id: 1
+              Operation Signing Request - delete a decentralized identifier:
+                value:
+                  jsonrpc: '2.0'
+                  method: deleteIdentifier
+                  params:
+                    - did: 'did:example:abc'
+                  id: 1
+              Signed Operations:
+                value:
+                  jsonrpc: '2.0'
+                  method: signedOperations
+                  params:
+                    - did: 'did:example:abc'
+                      operationSigningRequest: OSR goes here
+                      signature: 'signature object goes here (e.g., detached JWS)'
+                  id: 1
+        required: true
+      responses:
+        '200':
+          description: Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonRpcResponse'
+              examples:
+                Insert Identifier:
+                  value:
+                    jsonrpc: '2.0'
+                    id: 1
+                    result:
+                      '@context':
+                        - 'https://www.w3.org/2018/credentials/v1'
+                        - 'https://www.w3.org/2020/osr/v1'
+                      id: 'did:trusted-registry:123abc/osr/1872'
+                      type:
+                        - VerifiableCredential
+                        - OperationSigningRequest
+                      issuer: 'did:trusted-registry:123abc'
+                      issuanceDate: '2020-12-12T12:11:44Z'
+                      expirationDate: '2020-12-12T12:16:44Z'
+                      credentialSubject:
+                        id: 'did:example:abc'
+                        method: insertIdentifier
+                        inputArguments:
+                          did: 'did:example:abc'
+                          didDocument: '{base64url encoded DID Document}'
+                        rawSigningPayload: 01a2babb
+                        signingAlgValuesSupported:
+                          - ES256
+                          - EdDSA
+                      proof:
+                        type: RsaSignature2018
+                        created: '2020-12-12T12:11:49Z'
+                        proofPurpose: assertionMethod
+                        verificationMethod: 'did:trusted-registry:123abc'
+                        jws: >-
+                          eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..DJBMvvFAIC00nSGB6Tn0XKbbF9XrsaJZREWvR2aONYTQQxnyXirtXnlewJMBBn2h9hfcGZrvnC1b6PgWmukzFJ1IiH1dWgnDIS81BH-IxXnPkbuYDeySorc4QU9MJxdVkY5EL4HYbcIfwKj6X4LBQ2_ZHZIu1jdqLcRZqHcsDF5KKylKc1THn5VRWy5WhYg_gBnyWny8E6Qkrze53MR7OuAmmNJ1m1nN8SxDrG6a08L78J0-Fbas5OjAQz3c17GY8mVuDPOBIOVjMEghBlgl3nOi1ysxbRGhHLEK4s0KKbeRogZdgt1DkQxDFxxn41QWDw_mmMCjs9qxg0zcZzqEJw
+                Update Identifier:
+                  value:
+                    jsonrpc: '2.0'
+                    id: 1
+                    result:
+                      '@context':
+                        - 'https://www.w3.org/2018/credentials/v1'
+                        - 'https://www.w3.org/2020/osr/v1'
+                      id: 'did:trusted-registry:123abc/osr/1872'
+                      type:
+                        - VerifiableCredential
+                        - OperationSigningRequest
+                      issuer: 'did:trusted-registry:123abc'
+                      issuanceDate: '2020-12-12T12:11:44Z'
+                      expirationDate: '2020-12-12T12:16:44Z'
+                      credentialSubject:
+                        id: 'did:example:abc'
+                        method: updateIdentifier
+                        inputArguments:
+                          did: 'did:example:abc'
+                          didDocument: '{base64url encoded DID Document}'
+                        rawSigningPayload: 01a2babb
+                        signingAlgValuesSupported:
+                          - ES256
+                          - EdDSA
+                      proof:
+                        type: RsaSignature2018
+                        created: '2020-12-12T12:11:49Z'
+                        proofPurpose: assertionMethod
+                        verificationMethod: 'did:trusted-registry:123abc'
+                        jws: >-
+                          eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..DJBMvvFAIC00nSGB6Tn0XKbbF9XrsaJZREWvR2aONYTQQxnyXirtXnlewJMBBn2h9hfcGZrvnC1b6PgWmukzFJ1IiH1dWgnDIS81BH-IxXnPkbuYDeySorc4QU9MJxdVkY5EL4HYbcIfwKj6X4LBQ2_ZHZIu1jdqLcRZqHcsDF5KKylKc1THn5VRWy5WhYg_gBnyWny8E6Qkrze53MR7OuAmmNJ1m1nN8SxDrG6a08L78J0-Fbas5OjAQz3c17GY8mVuDPOBIOVjMEghBlgl3nOi1ysxbRGhHLEK4s0KKbeRogZdgt1DkQxDFxxn41QWDw_mmMCjs9qxg0zcZzqEJw
+                Delete Identifier:
+                  value:
+                    jsonrpc: '2.0'
+                    id: 1
+                    result:
+                      '@context':
+                        - 'https://www.w3.org/2018/credentials/v1'
+                        - 'https://www.w3.org/2020/osr/v1'
+                      id: 'did:trusted-registry:123abc/osr/1872'
+                      type:
+                        - VerifiableCredential
+                        - OperationSigningRequest
+                      issuer: 'did:trusted-registry:123abc'
+                      issuanceDate: '2020-12-12T12:11:44Z'
+                      expirationDate: '2020-12-12T12:16:44Z'
+                      credentialSubject:
+                        id: 'did:example:abc'
+                        method: deleteIdentifier
+                        inputArguments:
+                          did: 'did:example:abc'
+                        rawSigningPayload: 01a2babb
+                        signingAlgValuesSupported:
+                          - ES256
+                          - EdDSA
+                      proof:
+                        type: RsaSignature2018
+                        created: '2020-12-12T12:11:49Z'
+                        proofPurpose: assertionMethod
+                        verificationMethod: 'did:trusted-registry:123abc'
+                        jws: >-
+                          eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..DJBMvvFAIC00nSGB6Tn0XKbbF9XrsaJZREWvR2aONYTQQxnyXirtXnlewJMBBn2h9hfcGZrvnC1b6PgWmukzFJ1IiH1dWgnDIS81BH-IxXnPkbuYDeySorc4QU9MJxdVkY5EL4HYbcIfwKj6X4LBQ2_ZHZIu1jdqLcRZqHcsDF5KKylKc1THn5VRWy5WhYg_gBnyWny8E6Qkrze53MR7OuAmmNJ1m1nN8SxDrG6a08L78J0-Fbas5OjAQz3c17GY8mVuDPOBIOVjMEghBlgl3nOi1ysxbRGhHLEK4s0KKbeRogZdgt1DkQxDFxxn41QWDw_mmMCjs9qxg0zcZzqEJw
+                Send Operations:
+                  value:
+                    jsonrpc: '2.0'
+                    id: 1
+                    result: >-
+                      https://trusted.registry/status/a12cb01 (operation status
+                      id)
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                Bad Request:
+                  $ref: '#/components/examples/BadRequest'
+                Invalid Token:
+                  $ref: '#/components/examples/InvalidToken'
+components:
+  schemas:
+    Problem:
+      description: A Problem Details object (RFC 7807)
+      type: object
+      x-examples:
+        Not Enough Credit:
+          type: 'https://example.com/probs/out-of-credit'
+          title: You do not have enough credit.
+          detail: 'Your current balance is 30, but that costs 50.'
+          instance: /account/12345/msgs/abc
+      properties:
+        type:
+          type: string
+          format: uri
+          description: |
+            An absolute URI that identifies the problem type. When dereferenced,
+            it SHOULD provide human-readable documentation for the problem type.
+          default: 'about:blank'
+        title:
+          type: string
+          description: |
+            A short summary of the problem type.
+          example: Internal Server Error
+        status:
+          type: integer
+          format: int32
+          description: >
+            The HTTP status code generated by the origin server for this
+            occurrence of the problem.
+          minimum: 400
+          maximum: 600
+          exclusiveMaximum: true
+          example: 500
+        detail:
+          type: string
+          description: >
+            A human readable explanation specific to this occurrence of the
+            problem.
+          example: Connection timeout
+        instance:
+          type: string
+          format: uri
+          description: >
+            An absolute URI that identifies the specific occurrence of the
+            problem.
+
+            It may or may not yield further information if dereferenced.
+    did:
+      title: DID
+      description: Decentralized identifier URI.
+      type: string
+      format: URI (DID)
+      x-examples:
+        - 'did:example:abc'
+        - 'did:example:123'
+    didDocument:
+      title: DID Document
+      type: object
+      description: >
+        Resource that is associated with a decentralized identifier (DID). DID
+        documents typically
+
+        express verification methods and services that can be used to interact
+        with a DID
+
+        controller.
+      properties:
+        id:
+          type: string
+          example: 892c9637814ccd39256cbaa03250c92507ae183dda03d091fc24a3221ecae303
+          description: DID subject is the entity identified by the DID
+        '@context':
+          description: >
+            The @context property ensures that two systems operating on the same
+            DID document are
+
+            using mutually agreed terminology. It can be one or more URIs.
+          oneOf:
+            - type: object
+            - type: string
+        publicKey:
+          type: array
+          description: >
+            Cryptographic keys and other verification methods, which can be used
+            to authenticate or
+
+            authorize interactions with the DID subject or associated parties.
+          items:
+            $ref: '#/components/schemas/publicKey'
+        authentication:
+          type: array
+          example:
+            - 'did:example:0xec457d0a974c48d5685a7efa03d137dc8bbde7e3#key-1'
+          description: >
+            Authentication is a relationship between the DID subject and a set
+            of verification
+
+            methods. Verification method MAY be embedded or referenced.
+          items:
+            oneOf:
+              - type: object
+              - type: string
+        service:
+          type: array
+          description: >
+            Service endpoints express ways of communicating with the DID subject
+            or associated
+
+            entities.
+          items:
+            $ref: '#/components/schemas/serviceEndpoint'
+        created:
+          type: string
+          format: date-time
+          description: Creation time
+        updated:
+          type: string
+          format: date-time
+          description: timestamp of the most recent change
+        proof:
+          type: object
+          description: >
+            Proof is cryptographic proof of the integrity of the DID document.
+            It must be a valid
+
+            JSON-LD proof.
+        controller:
+          description: >
+            Controller property indicates that there are DID controller(s) other
+            than the DID
+
+            subject. It can be a valid DID or an array of valid DIDs.
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+      required:
+        - id
+        - '@context'
+    publicKey:
+      title: Public Key
+      description: Public key object.
+      type: object
+      required:
+        - id
+        - type
+        - controller
+      properties:
+        id:
+          type: string
+          description: URI that identifies the public key.
+          example: 'did:example:0xec457d0a974c48d5685a7efa03d137dc8bbde7e3#key-1'
+        type:
+          type: string
+          description: |
+            Public key type. Registry of available key types
+            https://w3c-ccg.github.io/ld-cryptosuite-registry/.
+          example: EcdsaSecp256k1VerificationKey2019
+        controller:
+          type: string
+          description: DID that identifies the controller of the corresponding private key.
+          example: 'did:example:0xec457d0a974c48d5685a7efa03d137dc8bbde7e3#key-1'
+        publicKeyBase58:
+          type: string
+          description: >
+            Raw public key encoded in base58. Supported key types ed25519,
+            secp256k1, secp256r1,
+
+            Curve25519/X25519.
+          example: H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV
+        publicKeyPem:
+          type: string
+          description: RSA public key encoded in PEM.
+          example: "-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n"
+        publicKeyJwk:
+          description: >
+            Public key encoded as a JWK. Supported key types ed25519, secp256k1,
+            secp256r1,
+
+            Curve25519/X25519.
+          type: object
+        ethereumAddress:
+          type: string
+          description: Valid Ethereum address. Key type secp256k1.
+          example: '0xec457d0a974c48d5685a7efa03d137dc8bbde7e3'
+      x-examples:
+        Public key example:
+          id: 'did:example:0xec457d0a974c48d5685a7efa03d137dc8bbde7e3#key-1'
+          type: Secp256k1VerificationKey2018
+          controller: 'did:example:0xec457d0a974c48d5685a7efa03d137dc8bbde7e3'
+          ethereumAddress: '0xec457d0a974c48d5685a7efa03d137dc8bbde7e3'
+    serviceEndpoint:
+      title: Service Endpoint
+      type: object
+      description: >-
+        A network address at which a service operates on behalf of a DID
+        subject.
+      x-examples:
+        OpenId service example:
+          id: 'did:example:123456789abcdefghi#openid'
+          type: OpenIdConnectVersion1.0Service
+          serviceEndpoint: 'https://openid.example.com/'
+        Social inbox example:
+          id: 'did:example:123456789abcdefghi#inbox'
+          type: SocialWebInboxService
+          serviceEndpoint: 'https://social.example.com/83hfh37dj'
+          description: My public social inbox
+          spamCost:
+            amount: '0.50'
+            currency: USD
+      properties:
+        id:
+          type: string
+          description: URI identifying the service
+        type:
+          type: string
+          description: Service type
+        serviceEndpoint:
+          description: Service endpoint. It is a JSON-LD object or a valid URI
+          oneOf:
+            - type: object
+            - type: string
+      required:
+        - id
+        - type
+        - serviceEndpoint
+    links:
+      title: Links
+      type: object
+      properties:
+        last:
+          type: string
+          description: URI of the last page
+        prev:
+          type: string
+          description: URI of the previous page
+        next:
+          type: string
+          description: URI of the next page
+        first:
+          type: string
+          description: URI of the first page
+      description: links model used for pagination
+      x-examples:
+        Links:
+          first: 'https://example.com/v1/identifiers?page[after]=1&page[size]=2'
+          prev: 'https://example.com/v1/identifiers?page[after]=2&page[size]=2'
+          next: 'https://example.com/v1/identifiers?page[after]=4&page[size]=2'
+          last: 'https://example.com/v1/identifiers?page[after]=13&page[size]=2'
+    JsonRpcResponse:
+      title: JSON-RPC Response
+      type: object
+      properties:
+        jsonrpc:
+          description: Must be exactly '2.0'
+          type: string
+        id:
+          description: Same identifier established by the client in the call
+          type: integer
+        result:
+          description: Result of the call
+          oneOf:
+            - type: object
+            - type: string
+  examples:
+    BadRequest:
+      value:
+        title: Bad request
+        status: 400
+        detail: Bad request
+    InvalidToken:
+      value:
+        title: Invalid token
+        status: 400
+        detail: Invalid token
+    Unauthorized:
+      value:
+        title: Unauthorized
+        status: 401
+        detail: Unauthorized
+    Forbidden:
+      value:
+        title: Forbidden
+        status: 403
+        detail: Forbidden
+    NotFound:
+      value:
+        title: Not found
+        status: 404
+        detail: Not found
+    TooLarge:
+      value:
+        title: Payload too large
+        status: 413
+        detail: Payload too large
+    InternalError:
+      value:
+        title: Internal error
+        status: 500
+        detail: Internal error
